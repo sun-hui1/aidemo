@@ -150,7 +150,6 @@ class LLMClient:
             "model": self.model,
             "messages": messages
         }
-        logger.info(f"📥 接收用户输入: {messages}")
         # 如果提供了工具，加入 payload
         if tools:
             payload["tools"] = tools
