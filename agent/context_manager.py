@@ -38,14 +38,32 @@ class ContextManager:
     def get_messages(self) -> list[dict]:
         return self.history.copy()
 
+    def set_system_message(self, content: str):
+        """设置或更新系统消息（始终保持在索引0且不参与trim）"""
+        if self.history and self.history[0]['role'] == 'system':
+            self.history[0]['content'] = content
+        else:
+            self.history.insert(0, {"role": "system", "content": content})
+
+    def _token_count(self, msg: dict) -> int:
+        """安全计算单条消息的 token 数，处理 content 为 None 的情况"""
+        content = msg.get("content")
+        if content is None:
+            return 0
+        return len(self.encoder.encode(str(content)))
+
     def _trim(self):
-        logger.info(f"Current context length: {len(self.encoder.encode(self.history[-1]['content']))}")
-        # 保留 system prompt，从后向前截断
-        total = sum(len(self.encoder.encode(m["content"])) for m in self.history)
+        total = sum(self._token_count(m) for m in self.history)
         while len(self.history) > 1 and total > self.max_tokens:
-            temp =  self.history.pop(1)  # 移除最早的非 system 消息
-            logger.info(f"Trimming context: {temp}")
-            total = sum(len(self.encoder.encode(m["content"])) for m in self.history)
+            removed = self.history.pop(1)
+            logger.info(f"Trimming context: {removed}")
+            # 如果移除的是带 tool_calls 的 assistant 消息，
+            # 则需要一并移除后续孤立的 tool 响应消息
+            if removed.get("role") == "assistant" and removed.get("tool_calls"):
+                while len(self.history) > 1 and self.history[1].get("role") == "tool":
+                    orphan = self.history.pop(1)
+                    logger.info(f"Trimming orphaned tool response: {orphan}")
+            total = sum(self._token_count(m) for m in self.history)
 
     # agent/context_manager.py (新增方法)
     def add_assistant_with_tools(self, message_dict: dict):
@@ -72,4 +90,3 @@ class ContextManager:
     def add_tool_response(self, tool_call_id: str, tool_name: str, content: str):
         """添加工具执行结果到历史消息"""
         self.add_message("tool", content, tool_call_id=tool_call_id, tool_name=tool_name)
-        self._trim() # 同样需要检查 Token 限制

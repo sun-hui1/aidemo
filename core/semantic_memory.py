@@ -3,7 +3,6 @@ import chromadb
 from chromadb.config import Settings
 from sentence_transformers import SentenceTransformer
 from utils.logger import get_logger
-
 logger = get_logger(__name__)
 
 class SemanticMemory:
