@@ -7,6 +7,7 @@ import uuid
 from core.semantic_memory import SemanticMemory
 import asyncio
 from agent.mcp_tools import MCPToolAdapter
+from typing import Iterator
 
 logger = get_logger(__name__)
 
@@ -154,4 +155,82 @@ class SimpleChatAgent:
             return parsed_tool_calls
         return []
 
-    
+    async def run_stream(self, user_input: str) -> tuple[bool, str | Iterator[str]]:
+        """
+        返回: (是否需要流式, 结果)
+        - 工具调用阶段：返回 (False, "执行中...")
+        - 最终回答阶段：返回 (True, 文本迭代器)
+        """
+        # === 1. 记忆检索与构造 ===
+        relevant_memories = self.memory.search_memories(self.session_id, user_input)
+        #  构造带有“回忆”的 System Prompt
+        memory_context = ""
+        if relevant_memories:
+            memory_str = "\n".join([f"- {m}" for m in relevant_memories])
+            memory_context = f"\n【相关历史回忆】:\n{memory_str}\n请结合以上回忆回答用户问题。"
+        # 注意：这里我们需要动态修改 System Prompt
+        # 简单做法：在 context 的最前面插入一条 system 消息
+        system_prompt = f"你是一个有用的助手。{memory_context}"
+
+        # 确保 System Prompt 在历史最前面
+        self.context_manager.set_system_message(system_prompt)
+        # === 2. 确保 MCP 连接 ===
+        await self._ensure_mcp_connected()
+
+        # 输入用户上下文
+        self.context_manager.add_message("user", user_input)
+        # 设置最大迭代次数，防止模型陷入死循环（比如一直调用工具却不结束）
+        max_iterations = 5
+        for _ in range(max_iterations):
+            messages = self.context_manager.get_messages()
+            all_tools = self._merge_tool_schemas()
+            
+            # 一、 阻塞请求判断是否需要工具
+            try:
+                response_data = self.llm.chat_completion_with_tool_retry(messages, tools=all_tools)
+            except Exception as e:
+                return f"❌ 系统繁忙:: {str(e)}"
+            
+            # 1、解析工具调用
+            tool_calls = self.parse_tool_calls(response_data)
+             # 2、执行工具调用
+            if tool_calls:
+                for tool_call in tool_calls:
+                    tool_name = tool_call["name"]
+                    args = tool_call["arguments"]
+                    tool_id = tool_call["id"]
+                    # 【关键】区分本地工具 vs MCP 工具
+                    if tool_name.startswith("mcp_") and self.mcp_adapter:
+                        # 调用 MCP 工具
+                        result = await self.mcp_adapter.execute(tool_name, args)
+                        logger.info(f"✅ MCP 工具 {tool_name} 执行结果: {result}")
+                        self.context_manager.add_tool_response(tool_id, tool_name, str(result))
+                    elif tool_name in AVAILABLE_FUNCTIONS:
+                        # 执行本地函数
+                        try:
+                            func = AVAILABLE_FUNCTIONS[tool_name]
+                            # 注意：有些工具不需要参数，有些需要
+                            if args:
+                                result = func(**args)
+                            else:
+                                result = func()
+                            
+                            logger.info(f"✅ 工具 {tool_name} 执行结果: {result}")
+                            
+                            # 将工具执行结果加入上下文
+                            # 格式必须严格符合 OpenAI 规范
+                            self.context_manager.add_tool_response(tool_id, tool_name, str(result))
+                        except Exception as e:
+                            error_msg = f"工具执行错误: {str(e)}"
+                            logger.error(error_msg)
+                            self.context_manager.add_tool_response(tool_id, tool_name, error_msg)
+                    else:
+                        self.context_manager.add_tool_response(tool_id, tool_name, "错误：未知工具")
+                # 关键点：如果有工具调用，必须再次调用 LLM，让它根据结果生成回答
+                continue 
+            
+            # 二、 最终回答阶段：返回流式迭代器
+            self.context_manager.add_message("assistant", "[streaming]")
+            return True, self.llm.chat_completion_stream(messages, tools=all_tools)
+            
+        return False, "️ 达到最大尝试次数"
