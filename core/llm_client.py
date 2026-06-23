@@ -43,7 +43,7 @@ class LLMClient:
 
         # 使用 json.dumps 显式序列化，确保中文等多语言字符正确处理
         json_payload = json.dumps(payload, ensure_ascii=False)
-        logger.info(f"发送到 LLM 的请求: {json_payload}")
+        logger.info(f"📤 发送到 LLM 的请求: {json_payload[:2000]}")
         try:
             return robust_api_call(self._send_request, url, payload)
         except Exception as e:
@@ -53,6 +53,16 @@ class LLMClient:
     def _send_request(self, url, payload):
         """实际发送请求的私有方法"""
         response = requests.post(url, json=payload, headers=self.headers, timeout=30)
+        if not response.ok:
+            # 提取 DeepSeek 返回的具体错误信息
+            try:
+                error_body = response.json()
+            except Exception:
+                error_body = response.text
+            logger.error(f"🚫 API 返回 {response.status_code}:\n{json.dumps(error_body, ensure_ascii=False, indent=2)}")
+            logger.error(f"📤 触发错误的 payload 摘要: model={payload.get('model')}, "
+                         f"messages_count={len(payload.get('messages', []))}, "
+                         f"tools_count={len(payload.get('tools', []))}")
         response.raise_for_status()
         return response.json()
 

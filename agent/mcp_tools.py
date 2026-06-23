@@ -26,6 +26,53 @@ class MCPToolAdapter:
         if self.client:
             await self.client.__aexit__(None, None, None)
 
+    def _normalize_schema(self, schema: dict) -> dict:
+        """
+        将 MCP 的 JSON Schema 规范化为 OpenAI function calling 兼容格式。
+        确保顶层有 type: object，并递归清理不兼容字段。
+        """
+        if not isinstance(schema, dict):
+            return {"type": "object", "properties": {}}
+
+        normalized = {"type": "object"}
+
+        # 复制 properties（如果存在且为 dict）
+        props = schema.get("properties")
+        if isinstance(props, dict):
+            cleaned = {}
+            for key, val in props.items():
+                if isinstance(val, dict):
+                    cleaned[key] = self._clean_property(val)
+            normalized["properties"] = cleaned
+        else:
+            normalized["properties"] = {}
+
+        # 复制 required（如果存在且为 list）
+        required = schema.get("required")
+        if isinstance(required, list):
+            normalized["required"] = required
+
+        return normalized
+
+    def _clean_property(self, prop: dict) -> dict:
+        """递归清理单个 property 定义，移除 DeepSeek 不支持的 JSON Schema 字段"""
+        # 保留白名单字段
+        allowed = {"type", "description", "properties", "required",
+                   "items", "enum", "default", "minimum", "maximum",
+                   "minLength", "maxLength", "pattern"}
+        cleaned = {k: v for k, v in prop.items() if k in allowed}
+
+        # 递归清理嵌套 properties
+        if "properties" in cleaned and isinstance(cleaned["properties"], dict):
+            cleaned["properties"] = {
+                k: self._clean_property(v) if isinstance(v, dict) else v
+                for k, v in cleaned["properties"].items()
+            }
+        # 递归清理嵌套 items（数组元素 schema）
+        if "items" in cleaned and isinstance(cleaned["items"], dict):
+            cleaned["items"] = self._clean_property(cleaned["items"])
+        return cleaned
+
     async def _load_tools_schema(self) -> list[dict]:
         """将 MCP 工具转换为 OpenAI 兼容格式"""
         raw_tools = await self.client.list_tools()
@@ -35,8 +82,8 @@ class MCPToolAdapter:
                 "type": "function",
                 "function": {
                     "name": f"mcp_{tool['name']}",  # 加前缀避免与本地工具冲突
-                    "description": tool["description"],
-                    "parameters": tool["input_schema"]
+                    "description": tool.get("description", ""),
+                    "parameters": self._normalize_schema(tool.get("input_schema", {}))
                 }
             })
         return converted
