@@ -1,1 +1,48 @@
-Nothing needs to be added to .gitignore since only a Python source file (`skills/file_skill.py`) was added, and no build artifacts, dependencies, or temporary files are present in the changes.
+```
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.ENV
+.venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Testing
+.coverage
+coverage/
+htmlcov/
+.noserc
+.tox/
+.cover/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Build and distribution artifacts
+dist/
+build/
+*.egg-info/
+.eggs/
+.sconsign.dblite
+._sconsign.dblite
+SConscript
+SConstruct
+```
