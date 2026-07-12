@@ -4,13 +4,22 @@ from typing import List, Dict, Any
 import random
 
 class WeatherSkill(BaseSkill):
+    """天气查询技能"""
+
+    def __init__(self):
+        super().__init__(
+            name="weather",
+            description="提供全球城市天气查询功能。支持实时温度、湿度和风速。",
+            version="1.0.0"
+        )
+
     @property
     def name(self) -> str:
-        return "weather"
+        return self._name
 
     @property
     def description(self) -> str:
-        return "提供全球城市天气查询功能。支持实时温度、湿度和风速。"
+        return self._description
 
     def get_tools(self) -> List[Dict]:
         return [

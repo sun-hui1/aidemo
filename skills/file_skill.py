@@ -10,14 +10,21 @@ class SecurityError(Exception):
 
 class FileSkill(BaseSkill):
     """文件操作技能"""
-    
+
+    def __init__(self):
+        super().__init__(
+            name="file",
+            description="提供文件读写、删除、列表和搜索功能。支持安全路径校验，只能访问工作区目录。",
+            version="1.0.0"
+        )
+
     @property
     def name(self) -> str:
-        return "file"
-    
+        return self._name
+
     @property
     def description(self) -> str:
-        return "提供文件读写、删除、列表和搜索功能。支持安全路径校验，只能访问工作区目录。"
+        return self._description
     
     def get_tools(self) -> List[Dict]:
         return [
