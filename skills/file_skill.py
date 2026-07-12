@@ -1,5 +1,5 @@
 # skills/file_skill.py
-from skills.base_skill import BaseSkill, SkillTool
+from skills.base_skill import BaseSkill, SkillResult
 from typing import List, Dict, Any
 import os
 from pathlib import Path
@@ -367,6 +367,62 @@ class FileSkill(BaseSkill):
         """简单的通配符匹配"""
         import fnmatch
         return fnmatch.fnmatch(filename, pattern)
+    
+    def call(self, tool_name: str, **kwargs) -> SkillResult:
+        """执行具体的文件操作"""
+        try:
+            if tool_name == "read":
+                result = self._read_file(
+                    kwargs.get("path"),
+                    kwargs.get("start_line"),
+                    kwargs.get("end_line")
+                )
+            elif tool_name == "write":
+                result = self._write_file(kwargs.get("path"), kwargs.get("content"))
+            elif tool_name == "append":
+                result = self._append_file(kwargs.get("path"), kwargs.get("content"))
+            elif tool_name == "delete":
+                result = self._delete_file(kwargs.get("path"))
+            elif tool_name == "list":
+                result = self._list_directory(
+                    kwargs.get("dir_path"),
+                    kwargs.get("recursive", False),
+                    kwargs.get("pattern")
+                )
+            elif tool_name == "search":
+                result = self._search_in_files(
+                    kwargs.get("pattern"),
+                    kwargs.get("dir_path", "."),
+                    kwargs.get("file_pattern", "*")
+                )
+            else:
+                return SkillResult(
+                    success=False,
+                    data=None,
+                    error=f"未知工具：{tool_name}",
+                    message=f"{self.name} 技能不包含此工具"
+                )
+            
+            return SkillResult(
+                success=True,
+                data=result,
+                error=None,
+                message="操作完成"
+            )
+        except SecurityError as e:
+            return SkillResult(
+                success=False,
+                data=None,
+                error=str(e),
+                message="安全校验失败"
+            )
+        except Exception as e:
+            return SkillResult(
+                success=False,
+                data=None,
+                error=str(e),
+                message="操作执行过程中发生错误"
+            )
 
 
 # 自动注册
