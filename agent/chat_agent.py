@@ -18,7 +18,7 @@ class SimpleChatAgent:
         初始化方法
         初始化LLM客户端实例
         """
-        # 如果没有提供 session_id，则生成一个随机的
+        # 如果没有提供 session_id，则生成一个随机的d
         self.session_id = session_id or str(uuid.uuid4())[:8]
         self.llm = LLMClient()  # 创建LLMClient类的实例并赋值给self.llm属性
         self.context_manager = ContextManager(session_id=self.session_id, max_tokens=4000, model="gpt-4")
