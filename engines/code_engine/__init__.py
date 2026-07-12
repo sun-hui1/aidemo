@@ -70,6 +70,10 @@ class CodeEngine:
         template_type = kwargs.get('template_type', 'python_module')
         return self.generator.generate_boilerplate(template_type, description=description, **kwargs)
     
+    def generate_boilerplate(self, template_type: str, **kwargs):
+        """生成代码模板"""
+        return self.generator.generate_boilerplate(template_type, **kwargs)
+    
     def generate_function(self, name: str, args: list, body: str, docstring: str = None):
         """生成函数代码"""
         return self.generator.generate_function(name, args, body, docstring)

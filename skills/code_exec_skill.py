@@ -10,7 +10,7 @@ import tempfile
 import json
 from typing import Dict, Any, Optional, List
 from contextlib import redirect_stdout, redirect_stderr
-from base_skill import BaseSkill, SkillResult
+from skills.base_skill import BaseSkill, SkillResult
 
 
 class CodeExecSkill(BaseSkill):

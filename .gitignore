@@ -1,74 +1,48 @@
-# Python
+```
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# 虚拟环境
-venv/
-env/
-ENV/
-env.bak/
-venv.bak/
-
-# 环境变量文件
+*.pyc
+*.pyo
+*.pyd
+*.log
 .env
-*.env
-
-# IDE
+.env.local
 .vscode/
 .idea/
+dist/
+build/
+node_modules/
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+coverage/
+htmlcov/
+.coverage
+*.tmp
 *.swp
 *.swo
-*~
-
-# 日志文件
-*.log
-logs/
-
-# 临时文件
-*.tmp
-*.temp
-temp/
-tmp/
-
-# 系统文件
 .DS_Store
 Thumbs.db
-
-# 项目特定
-reports/
-custom_reports/
-streamlit_reports/
-*.json
-*.md
-!README.md
-!LICENSE
-
-# Streamlit
-.streamlit/
-
-# 测试覆盖率
-.coverage
-htmlcov/
-.pytest_cache/
-.venv/
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
+```
