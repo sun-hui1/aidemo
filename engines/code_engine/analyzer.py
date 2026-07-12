@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 @dataclass
 class CodeMetrics:
     """代码度量指标"""
-    loc: int = 0  # 代码行数
+    loc: int = 0  # 代码行数1
     blank_lines: int = 0
     comment_lines: int = 0
     functions: int = 0
