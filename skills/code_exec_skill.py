@@ -32,46 +32,52 @@ class CodeExecSkill(BaseSkill):
     def get_tools(self) -> List[Dict[str, Any]]:
         return [
             {
-                "name": "execute_python",
-                "description": "在隔离环境中执行 Python 代码片段。适用于数据处理、算法验证、脚本生成等。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "code": {
-                            "type": "string",
-                            "description": "要执行的 Python 代码字符串"
+                "type": "function",
+                "function": {
+                    "name": "execute_python",
+                    "description": "在隔离环境中执行 Python 代码片段。适用于数据处理、算法验证、脚本生成等。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "code": {
+                                "type": "string",
+                                "description": "要执行的 Python 代码字符串"
+                            },
+                            "timeout": {
+                                "type": "integer",
+                                "description": "执行超时时间（秒），默认 30 秒",
+                                "default": 30
+                            }
                         },
-                        "timeout": {
-                            "type": "integer",
-                            "description": "执行超时时间（秒），默认 30 秒",
-                            "default": 30
-                        }
-                    },
-                    "required": ["code"]
+                        "required": ["code"]
+                    }
                 }
             },
             {
-                "name": "execute_shell",
-                "description": "执行 Shell 命令。适用于文件操作、系统信息查询、调用外部工具等。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "command": {
-                            "type": "string",
-                            "description": "要执行的 Shell 命令"
+                "type": "function",
+                "function": {
+                    "name": "execute_shell",
+                    "description": "执行 Shell 命令。适用于文件操作、系统信息查询、调用外部工具等。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "command": {
+                                "type": "string",
+                                "description": "要执行的 Shell 命令"
+                            },
+                            "cwd": {
+                                "type": "string",
+                                "description": "命令执行的工作目录，默认为当前工作区",
+                                "default": None
+                            },
+                            "timeout": {
+                                "type": "integer",
+                                "description": "执行超时时间（秒），默认 60 秒",
+                                "default": 60
+                            }
                         },
-                        "cwd": {
-                            "type": "string",
-                            "description": "命令执行的工作目录，默认为当前工作区",
-                            "default": None
-                        },
-                        "timeout": {
-                            "type": "integer",
-                            "description": "执行超时时间（秒），默认 60 秒",
-                            "default": 60
-                        }
-                    },
-                    "required": ["command"]
+                        "required": ["command"]
+                    }
                 }
             }
         ]
