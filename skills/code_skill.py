@@ -220,12 +220,37 @@ class CodeSkill(BaseSkill):
     def call(self, tool_name: str, **kwargs) -> SkillResult:
         """执行具体的代码操作"""
         try:
-            if tool_name == "analyze":
+            # 工具名称映射：支持完整名称和简化名称
+            tool_map = {
+                "code_analyze": "analyze",
+                "analyze": "analyze",
+                "code_generate": "generate",
+                "generate": "generate",
+                "code_review": "review",
+                "review": "review",
+                "code_explain": "explain",
+                "explain": "explain",
+                "code_refactor": "refactor",
+                "refactor": "refactor",
+                "code_modify": "modify",
+                "modify": "modify"
+            }
+            
+            mapped_name = tool_map.get(tool_name)
+            if not mapped_name:
+                return SkillResult(
+                    success=False,
+                    data=None,
+                    error=f"未知工具：{tool_name}",
+                    message=f"{self.name} 技能不包含此工具"
+                )
+            
+            if mapped_name == "analyze":
                 return self._analyze_code(
                     file_path=kwargs.get("file_path"),
                     detail_level=kwargs.get("detail_level", "brief")
                 )
-            elif tool_name == "generate":
+            elif mapped_name == "generate":
                 return self._generate_code(
                     description=kwargs.get("description"),
                     language=kwargs.get("language", "python"),
@@ -233,18 +258,18 @@ class CodeSkill(BaseSkill):
                     function_name=kwargs.get("function_name"),
                     class_name=kwargs.get("class_name")
                 )
-            elif tool_name == "review":
+            elif mapped_name == "review":
                 return self._review_code(
                     file_path=kwargs.get("file_path"),
                     focus_areas=kwargs.get("focus_areas", ["all"])
                 )
-            elif tool_name == "explain":
+            elif mapped_name == "explain":
                 return self._explain_code(
                     file_path=kwargs.get("file_path"),
                     detail_level=kwargs.get("detail_level", "brief"),
                     focus=kwargs.get("focus", "overall")
                 )
-            elif tool_name == "refactor":
+            elif mapped_name == "refactor":
                 return self._refactor_code(
                     file_path=kwargs.get("file_path"),
                     strategy=kwargs.get("strategy"),
@@ -252,7 +277,7 @@ class CodeSkill(BaseSkill):
                     start_line=kwargs.get("start_line"),
                     end_line=kwargs.get("end_line")
                 )
-            elif tool_name == "modify":
+            elif mapped_name == "modify":
                 return self._modify_code(
                     file_path=kwargs.get("file_path"),
                     function_name=kwargs.get("function_name"),
@@ -352,10 +377,21 @@ class CodeSkill(BaseSkill):
                 message="代码生成失败"
             )
     
-    def _review_code(self, file_path: str, focus_areas: list) -> SkillResult:
+    def _review_code(self, file_path: str = None, focus_areas: list = None, code: str = None, language: str = "python") -> SkillResult:
         """审查代码"""
         try:
-            result = self.engine.review_file(file_path)
+            # 支持直接传入代码字符串或文件路径
+            if code is not None:
+                result = self.engine.review_code(code, language)
+            elif file_path:
+                result = self.engine.review_file(file_path)
+            else:
+                return SkillResult(
+                    success=False,
+                    data=None,
+                    error="必须提供 file_path 或 code 参数",
+                    message="代码审查失败"
+                )
             
             if "error" in result:
                 return SkillResult(
@@ -367,7 +403,7 @@ class CodeSkill(BaseSkill):
             
             # 根据关注领域过滤问题
             issues = result.get("issues", [])
-            if "all" not in focus_areas:
+            if focus_areas and "all" not in focus_areas:
                 filtered_issues = [
                     issue for issue in issues 
                     if issue.get("category") in focus_areas
