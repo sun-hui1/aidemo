@@ -1,0 +1,27 @@
+# AI 编码助手依赖清单
+# Python >= 3.8
+
+# 核心依赖
+rich>=13.0.0,<14.0.0
+prompt_toolkit>=3.0.40,<4.0.0
+
+# LLM 客户端
+openai>=1.0.0,<2.0.0
+
+# 配置管理
+python-dotenv>=1.0.0,<2.0.0
+
+# 向量数据库
+chromadb>=0.4.0,<1.0.0
+
+# MCP (Model Context Protocol)
+mcp>=0.1.0,<1.0.0
+
+# 工具库
+pydantic>=2.0.0,<3.0.0
+httpx>=0.25.0,<1.0.0
+
+# 开发工具
+pytest>=7.0.0
+black>=23.0.0
+flake8>=6.0.0
