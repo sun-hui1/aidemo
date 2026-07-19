@@ -1,9 +1,27 @@
-mcp==1.28.1
-prompt_toolkit==3.0.52
-pydantic==2.13.4
-python-dotenv==1.2.2
-Requests==2.34.2
-rich==15.0.0
-sentence_transformers==5.6.0
-tenacity==9.1.2
-tiktoken==0.12.0
+# AI 编码助手依赖清单
+# Python >= 3.8
+
+# 核心依赖
+rich>=13.0.0,<14.0.0
+prompt_toolkit>=3.0.40,<4.0.0
+
+# LLM 客户端
+openai>=1.0.0,<2.0.0
+
+# 配置管理
+python-dotenv>=1.0.0,<2.0.0
+
+# 向量数据库
+chromadb>=0.4.0,<1.0.0
+
+# MCP (Model Context Protocol)
+mcp>=0.1.0,<1.0.0
+
+# 工具库
+pydantic>=2.0.0,<3.0.0
+httpx>=0.25.0,<1.0.0
+
+# 开发工具
+pytest>=7.0.0
+black>=23.0.0
+flake8>=6.0.0
