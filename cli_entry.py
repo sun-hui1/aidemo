@@ -63,13 +63,23 @@ class AICodingAssistant:
         
         # 初始化历史文件
         history_path = Path.home() / '.ai_coding_assistant_history'
-        self.session = PromptSession(
-            completer=CommandCompleter(),
-            history=FileHistory(str(history_path)),
-            auto_suggest=AutoSuggestFromHistory(),
-            enable_history_search=True,
-            style=None  # 禁用自定义样式避免冲突
-        )
+        try:
+            self.session = PromptSession(
+                completer=CommandCompleter(),
+                history=FileHistory(str(history_path)),
+                auto_suggest=AutoSuggestFromHistory(),
+                enable_history_search=True,
+            )
+        except Exception as e:
+            # 如果 FileHistory 初始化失败，使用简单的 InMemoryHistory
+            from prompt_toolkit.history import InMemoryHistory
+            console.print(f"[yellow]⚠️ 无法加载历史文件，使用内存历史：{e}[/yellow]")
+            self.session = PromptSession(
+                completer=CommandCompleter(),
+                history=InMemoryHistory(),
+                auto_suggest=AutoSuggestFromHistory(),
+                enable_history_search=True,
+            )
         
         self._show_welcome()
     
